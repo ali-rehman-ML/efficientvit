@@ -7,7 +7,7 @@ import argparse
 import torch
 from tinynn.converter import TFLiteConverter
 
-from efficientvit.cls_model_zoo import create_cls_model
+# from efficientvit.cls_model_zoo import create_cls_model
 from efficientvit.models.nn.ops import UpSampleLayer
 from efficientvit.models.utils import val2tuple
 from efficientvit.seg_model_zoo import create_seg_model
@@ -17,7 +17,8 @@ parser.add_argument("--export_path", type=str)
 parser.add_argument("--task", type=str, default="cls", choices=["cls", "seg"])
 parser.add_argument("--dataset", type=str, default="none", choices=["ade20k", "cityscapes"])
 parser.add_argument("--model", type=str, default="b3")
-parser.add_argument("--resolution", type=int, nargs="+", default=224)
+parser.add_argument("--weight_url", type=str, default="none")
+parser.add_argument("--resolution", type=int, default=512)
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -32,7 +33,8 @@ if __name__ == "__main__":
         model = create_seg_model(
             name=args.model,
             dataset=args.dataset,
-            pretrained=False,
+            weight_url=args.weight_url,
+            pretrained=True,
         )
         # bicubic upsampling is not supported in TFLite
         # replace it with bilinear upsampling
@@ -44,7 +46,7 @@ if __name__ == "__main__":
 
     model.cpu()
     model.eval()
-    dummy_input = torch.rand((1, 3, *resolution))
+    dummy_input = torch.rand((1, 3, args.resolution,args.resolution*2))
     with torch.no_grad():
         converter = TFLiteConverter(model, dummy_input, tflite_path=args.export_path)
         converter.convert()

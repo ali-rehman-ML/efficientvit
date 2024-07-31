@@ -7,7 +7,7 @@ import argparse
 import torch
 
 from efficientvit.apps.utils import export_onnx
-from efficientvit.cls_model_zoo import create_cls_model
+# from efficientvit.cls_model_zoo import create_cls_model
 from efficientvit.models.utils import val2tuple
 from efficientvit.seg_model_zoo import create_seg_model
 
@@ -18,7 +18,8 @@ def main():
     parser.add_argument("--task", type=str, default="cls", choices=["cls", "seg"])
     parser.add_argument("--dataset", type=str, default="none", choices=["ade20k", "cityscapes"])
     parser.add_argument("--model", type=str, default="b3")
-    parser.add_argument("--resolution", type=int, nargs="+", default=224)
+    parser.add_argument("--weight_url", type=str, default="none")
+    parser.add_argument("--resolution", type=int, default=224)
     parser.add_argument("--bs", help="batch size", type=int, default=16)
     parser.add_argument("--op_set", type=int, default=11)
 
@@ -34,12 +35,13 @@ def main():
         model = create_seg_model(
             name=args.model,
             dataset=args.dataset,
-            pretrained=False,
+            weight_url=args.weight_url,
+            pretrained=True,
         )
     else:
         raise NotImplementedError
 
-    dummy_input = torch.rand((args.bs, 3, *resolution))
+    dummy_input = torch.rand((args.bs, 3, args.resolution,args.resolution*2))
     export_onnx(model, args.export_path, dummy_input, simplify=True, opset=args.op_set)
 
 
